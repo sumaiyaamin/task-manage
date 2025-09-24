@@ -15,7 +15,7 @@ export class TasksService {
     return t;
   }
 
-  create(task: Omit<Task, 'id'>): Promise<Task> { return this.repo.save(this.repo.create(task as any)); }
+  create(task: Omit<Task, 'id'>): Promise<Task> { return this.repo.save(this.repo.create(task as any)) as unknown as Promise<Task>; }
 
   async update(id: string, update: Partial<Omit<Task, 'id'>>): Promise<Task> {
     await this.repo.update({ id }, update as any);

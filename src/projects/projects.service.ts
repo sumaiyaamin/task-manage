@@ -15,7 +15,7 @@ export class ProjectsService {
     return p;
   }
 
-  create(project: Omit<Project, 'id'>): Promise<Project> { return this.repo.save(this.repo.create(project as any)); }
+  create(project: Omit<Project, 'id'>): Promise<Project> { return this.repo.save(this.repo.create(project as any)) as unknown as Promise<Project>; }
 
   async update(id: string, update: Partial<Omit<Project, 'id'>>): Promise<Project> {
     await this.repo.update({ id }, update as any);

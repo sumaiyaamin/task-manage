@@ -24,22 +24,37 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({ url: process.env.REDIS_URL || 'redis://localhost:6379' }),
-        ttl: 5,
-      }),
+      useFactory: async () => {
+        if (!process.env.REDIS_URL) {
+          return { ttl: 5 } as any; // in-memory store
+        }
+        return {
+          store: await redisStore({ url: process.env.REDIS_URL }),
+          ttl: 5,
+        } as any;
+      },
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT || 5432),
-        username: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASS || 'postgres',
-        database: process.env.DB_NAME || 'collab_pm',
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+      useFactory: () => {
+        const useSqlite = process.env.DB_TYPE === 'sqlite' || process.env.NODE_ENV === 'test';
+        return useSqlite
+          ? {
+              type: 'sqlite' as const,
+              database: process.env.SQLITE_PATH || ':memory:',
+              autoLoadEntities: true,
+              synchronize: true,
+            }
+          : {
+              type: 'postgres' as const,
+              host: process.env.DB_HOST || 'localhost',
+              port: Number(process.env.DB_PORT || 5432),
+              username: process.env.DB_USER || 'postgres',
+              password: process.env.DB_PASS || 'postgres',
+              database: process.env.DB_NAME || 'collab_pm',
+              autoLoadEntities: true,
+              synchronize: true,
+            };
+      },
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
