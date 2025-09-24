@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { Project } from './project.entity';
 import { IsArray, IsOptional, IsString, MinLength } from 'class-validator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 class CreateProjectDto {
   @IsString() @MinLength(2) name: string;
@@ -28,6 +30,8 @@ export class ProjectsController {
   findOne(@Param('id') id: string): Promise<Project> { return this.projectsService.findOne(id); }
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager')
   create(@Body() dto: CreateProjectDto): Promise<Project> {
     const payload: Partial<Project> = {
       name: dto.name,
@@ -38,6 +42,8 @@ export class ProjectsController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('Admin', 'Manager')
   update(@Param('id') id: string, @Body() dto: UpdateProjectDto): Promise<Project> {
     const payload: Partial<Project> = {
       name: dto.name,
